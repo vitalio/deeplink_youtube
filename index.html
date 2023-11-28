@@ -1,6 +1,80 @@
+<!DOCTYPE html>
 <html>
-    <head></head>
-    <body>
-        youtube deeplink
-    </body>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+	</head>
+	<body>
+		<script type="text/javascript">
+			window.onload = function(){
+				function getParameterByName(name, url = window.location.href){
+					name = name.replace(/[\[\]]/g, '\\$&');
+					const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+						results = regex.exec(url);
+					if (!results)
+                        return null;
+					if (!results[2])
+                        return '';
+					return decodeURIComponent(results[2].replace(/\+/g, ' '));
+				}
+				const youtube_video_long_link = 'www.youtube.com/watch?v=';
+				const youtube_channel_link = 'www.youtube.com/';
+				const youtube_short_link = 'https://youtu.be/';
+				const https = 'https://';
+				const www = 'www.';
+				let fallback_url = getParameterByName('v');
+				let channel_fallback = getParameterByName('c');
+				if (channel_fallback)
+                {
+					if (channel_fallback.includes(https))
+                    {
+						if (channel_fallback.includes(www))
+                            fallback_url = channel_fallback.replace(https, '');
+						else
+                            fallback_url = channel_fallback.replace(https, www);
+					}
+                    else if (!channel_fallback.includes(www))
+                        fallback_url = youtube_channel_link+channel_fallback;
+				}
+                else if (fallback_url)
+                {
+					if (fallback_url.includes(youtube_short_link))
+						fallback_url = youtube_video_long_link+fallback_url.split(youtube_short_link)[1];
+                    else if (fallback_url.includes(https))
+                    {
+						if (fallback_url.includes(www))
+                            fallback_url = fallback_url.replace(https, '');
+						else
+                            fallback_url = fallback_url.replace(https, www);
+					}
+                    else if (!fallback_url.includes(www))
+                        fallback_url = youtube_video_long_link+fallback_url;
+				}
+                else
+                    fallback_url = youtube_channel_link+'@novokrinitskii';
+				const androidApp = `intent://${fallback_url}#Intent;package=com.google.android.youtube;scheme=https;end`;
+				const iosApp = `vnd.youtube://${fallback_url}`;
+				if (/iPhone|iPad|iPod/i.test(navigator.userAgent))
+                {
+					window.location.href = iosApp;
+					window.setTimeout(function (){
+						window.location.href = https+fallback_url;
+					}, 25);
+				}
+                else if (/Android/i.test(navigator.userAgent))
+                {
+					window.location.href = androidApp;
+					window.setTimeout(function(){
+						window.location.href = https+fallback_url;
+					}, 25);
+				}
+                else
+					window.location.href = https+fallback_url;
+				function kill_popup(){
+					window.removeEventListener('pagehide', kill_popup);
+				}
+				window.addEventListener('pagehide', kill_popup);
+			};
+		</script>
+	</body>
 </html>
